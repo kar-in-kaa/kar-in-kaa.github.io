@@ -1,0 +1,539 @@
+<!doctype html><html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio</title>
+  <style>
+    body {
+      font-family: Verdana, sans-serif;
+      background: #fff;
+      margin: 0;
+      padding: 40px;
+      color: #000;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: transparent;
+      padding: 20px 40px;
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    header h1 {
+      font-family: "Century Gothic", sans-serif;
+      font-weight: bold;
+      font-size: 40px;
+      margin: 0;
+    }
+
+    header button {
+      font-size: 16px;
+      text-decoration: none;
+      color: #000;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .attention {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: "Century Gothic", sans-serif;
+      z-index: 1000;
+    }
+
+    .attention img {
+      width: 50px;
+    }
+
+    .attention-text {
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .image-box {
+      position: absolute;
+      border: 2px solid #000;
+      overflow: hidden;
+      box-sizing: border-box;
+      background: #eee;
+      animation: float 8s ease-in-out infinite alternate;
+    }
+
+    .image-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    /* Floating animation variations */
+    @keyframes float1 {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(-30px, 40px); }
+    }
+
+    @keyframes float2 {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, -25px); }
+    }
+
+    @keyframes float3 {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(-40px, -40px); }
+    }
+
+    @keyframes float4 {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(35px, 50px); }
+    }
+
+    @keyframes float5 {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(-45px, 30px); }
+    }
+
+    .float1 { animation-name: float1; }
+    .float2 { animation-name: float2; }
+    .float3 { animation-name: float3; }
+    .float4 { animation-name: float4; }
+    .float5 { animation-name: float5; }
+
+    #aboutPage {
+      margin-top: 120px;
+    }
+
+    .about-content {
+      max-width: 1000px;
+      margin: 0 auto;
+      margin-left: 10%;
+      padding: 40px 20px;
+    }
+
+    .resume-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+    }
+
+    .resume-left,
+    .resume-right {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .resume-left p,
+    .resume-right p {
+      font-family: Verdana, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .resume-left p strong,
+    .resume-right p strong {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .resume-right img {
+      width: 100%;
+      max-width: 300px;
+      height: auto;
+      margin-bottom: 3rem;
+      transform: rotate(-6deg);
+    }
+
+    .skills {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .skills p {
+      margin: 0;
+    }
+
+    #worksPage {
+      min-height: 3000px;
+      position: relative;
+    }
+
+    /* Underline "About" button on hover */
+    header button:hover {
+      text-decoration: underline;
+    }
+
+    /* Scale up floating project images on hover */
+    .image-box img:hover {
+      transform: scale(1.05);
+      transition: transform 0.3s ease;
+    }
+
+    /* Prevent 'resumé' picture from scaling */
+    .resume-right img:hover {
+      transform: rotate(-6deg); /* Maintain original rotation without scaling */
+    }
+
+    @media (max-width: 768px) {
+      header {
+        padding: 10px 20px;
+      }
+
+      header h1 {
+        font-size: 20px;
+      }
+
+      header button {
+        font-size: 12px;
+      }
+
+      .attention {
+        bottom: 10px;
+        right: 0;
+        gap: 5px;
+        transform: scale(0.8);
+      }
+
+      .attention img {
+        width: 30px;
+      }
+
+      .attention-text {
+        font-size: 10px;
+      }
+
+      .image-box {
+        border-width: 1px;
+        animation-duration: 6s;
+      }
+
+      .image-box img {
+        pointer-events: auto;
+      }
+
+      .about-content {
+        margin: 0 auto;
+        padding: -0px 5px;
+        max-width: 100%;
+        margin-top:-5rem;
+      }
+
+      .resume-section {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+      }
+
+      .resume-left,
+      .resume-right {
+        gap: 15px;
+      }
+
+      .resume-right img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        transform: rotate(-3deg);
+        margin: 0 auto;
+      }
+
+      .resume-left p,
+      .resume-right p,
+      .skills {
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .resume-left p strong,
+      .resume-right p strong {
+        margin-bottom: 6px;
+        font-size: 14px;
+      }
+
+      .skills p {
+        font-size: 13px;
+      }
+
+      .resume-left p,
+      .skills p {
+        margin-bottom: 15px;
+      }
+
+      .resume-left p,
+      .resume-right p,
+      .skills p {
+        padding: 0;
+        margin: 0 0 10px 0;
+      }
+
+      .resume-right p {
+        padding-top: 10px;
+      }
+
+      .resume-section > * {
+        width: 100%;
+      }
+    }
+  </style></head>
+<body>
+  <header>
+    <h1>KARO</h1>
+    <button id="toggleBtn" aria-label="Go to About">About</button>
+  </header>
+
+  <div class="attention">
+    <img src="icons/attention-200.png" alt="Attention Icon">
+    <div class="attention-text">
+      <strong>Attention</strong><br>If you want to contact me:<br><a 
+      href='mailto:kajka.kubickova@gmail.com'>kajka.kubickova@gmail.com</a>
+    </div>
+  </div>
+
+  <!-- Works PAGE -->
+  <section id="worksPage" class="page active">
+    <a href="https://filipmaliszewski.github.io/portfolio/projects/project4.html" target="_blank" style="position: absolute; left: 302.979px; top: 459.026px; width: 300px; height: 400px; display: block; z-index: 0;">
+      <div class="image-box float3" style="width: 300px; height: 400px;">
+        <img src="index_files/54602328238_174cf9e116_b.jpg" alt="Project 3">
+      </div>
+    </a>
+    <a href="https://filipmaliszewski.github.io/portfolio/projects/project2.html" target="_blank" style="position: absolute; left: 112.153px; top: 2474.88px; width: 400px; height: 300px; display: block; z-index: 0;">
+      <div class="image-box float4" style="width: 400px; height: 300px;">
+        <img src="index_files/54602758272_0486cc9e14_b.jpg" alt="Project 4">
+      </div>
+    </a>
+    <a href="https://filipmaliszewski.github.io/portfolio/projects/project1.html" target="_blank" style="position: absolute; left: 967.321px; top: 2524.94px; width: 300px; height: 400px; display: block; z-index: 0;">
+      <div class="image-box float1" style="width: 300px; height: 400px;">
+        <img src="index_files/54608563675_6a3c45364f_b.jpg" alt="Project 1">
+      </div>
+    </a>
+    <a href="https://filipmaliszewski.github.io/portfolio/projects/project5.html" target="_blank" style="position: absolute; left: 673.807px; top: 1165.75px; width: 400px; height: 300px; display: block; z-index: 0;">
+      <div class="image-box float5" style="width: 400px; height: 300px;">
+        <img src="index_files/giphy.gif" alt="Project 5">
+      </div>
+    </a>
+    <a href="https://filipmaliszewski.github.io/portfolio/projects/project9.html" target="_blank" style="position: absolute; left: 259.121px; top: 1746.73px; width: 300px; height: 400px; display: block; z-index: 0;">
+      <div class="image-box float4" style="width: 300px; height: 400px;">
+        <img src="index_files/54676266644_a32f4a2dd0_b.jpg" alt="Project 9">
+      </div>
+    </a>
+    <a href="https://filipmaliszewski.github.io/portfolio/projects/project7.html" target="_blank" style="position: absolute; left: 687.497px; top: 1975.09px; width: 300px; height: 400px; display: block; z-index: 0;">
+      <div class="image-box float2" style="width: 300px; height: 400px;">
+        <img src="index_files/giphy_004.gif" alt="Project 7">
+      </div>
+    </a>
+    <a href="https://filipmaliszewski.github.io/portfolio/projects/project8.html" target="_blank" style="position: absolute; left: 841.064px; top: 580.019px; width: 400px; height: 300px; display: block; z-index: 0;">
+      <div class="image-box float3" style="width: 400px; height: 300px;">
+        <img src="index_files/giphy_003.gif" alt="Project 8">
+      </div>
+    </a>
+    <a href="https://filipmaliszewski.github.io/portfolio/projects/project3.html" target="_blank" style="position: absolute; left: 222.759px; top: 1305.68px; width: 400px; height: 300px; display: block; z-index: 0;">
+      <div class="image-box float2" style="width: 400px; height: 300px;">
+        <img src="index_files/giphy_005.gif" alt="Project 2">
+      </div>
+    </a>
+    <a href="https://filipmaliszewski.github.io/portfolio/projects/project6.html" target="_blank" style="position: absolute; left: 127.582px; top: 937.938px; width: 400px; height: 300px; display: block; z-index: 0;">
+      <div class="image-box float1" style="width: 400px; height: 300px;">
+        <img src="index_files/giphy_002.gif" alt="Project 6">
+      </div>
+    </a>
+  </section>
+
+  <!-- About PAGE -->
+  <section id="aboutPage" class="page">
+    <div class="about-content">
+      <div class="resume-section">
+        <div class="resume-left">
+          <p>EDUCATION & TRAINING<br>
+            Amsterdam Fashion Institute & Hogeschool van Amsterdam<br>
+            Master of Science in Digital Design: Digital Fashion Technologies<br>
+            2025 – Present
+          <p>Universitas Gadjah Mada & University of Groningen<br>
+            Double Master's Degree in Urban & Regional Planning and Engineering<br>
+            2024 – 2025, first half
+          <p>Amsterdam University College<br>
+            Full academic scholarship awarded by the Faculty of Engineering of UGM.<br>
+            Bachelor in Liberal Arts & Sciences<br>
+            2021 – 2024
+          <p>Academic Exchange Program – The Chinese University of Hong Kong<br>
+            Major in Social Sciences, Environmental Policy & Urban Studies.<br>
+            Thesis: Smelling off Stress: The Impact of Fragrant Plants on Urban Smellscapes And Wellbeing<br>
+            Completed with distinction/honours<br>
+            2023
+          <p>Amsterdam Fashion Institute<br>
+            Bachelor of Arts in Fashion & Textile Technologies<br>
+            Focus on visual culture and architecture, GIS, comparative urbanism, field research and urban studies.<br>
+            2022 – 2023, 1 semester
+          <p>HIGH SCHOOL<br>
+            LEAF Academy, Bratislava<br>
+            American High School Diploma with AP International Diploma<br>
+            AP Environmental Science, AP Statistics, AP Comparative Government & Politics, AP 2-D Art & Design, AP English Language and Composition, Entrepreneurial Leadership Programme.<br>
+            2019 – 2021
+          <p>Spojená Škola Tilgnerova, Bratislava<br>
+            Slovak High School Diploma ‘Maturita’ (honours programme)
+          <p>CERTIFICATES<br>
+            Inside LVMH Certificate 2025 (issued 2025)<br>
+            Specialisation: Luxury Industry and the Society, Luxury Goods, Creation and Branding, Operations and Supply Chain
+          <div class="skills">
+            <p>SKILLS<br>
+              skill1.....<br>
+              skill2...<br>etc.<br>
+              Currently bartending in Amsterdam because the rent isn’t gonna pay itself.
+          </div>
+        </div>
+        <div class="resume-right">
+          <img src="pictures/portrait-karolina.jpeg" alt="Portrait of Karolina KUBICKOVA">
+          <p>Hii. I am Karo.<br>A Digital Design and Fashion Technologies master student,
+            multimedia artist, fashion designer and writer. I also work in urban and environmental research, event production, and modeling.
+          <p>I am a hopeless romantic — I am most passionate about bridging the inconceivable gap between creative industries and sustainable ecological solutions.
+          <p>This is a rough draft of me as a multidisciplinary professional.
+            You can find me via my <a href='https://www.instagram.com/kar_in_kaa/'>instagram</a>. Or my <a href='mailto:kajka.kubickova@gmail.com'>email</a>.
+            <br>On the following pages you can find a selection of some of the stuff I adore or I created.
+          <p>How I see life: only the crazy ones know what it is to live, so say yes, accept strange invites, go to forgotten places, show yourself the same kindness you show to others, art is in everyone/everything/everywhere, take a step back and absorb the world around you, say what you think, ask for what you want, love unapologetically, all your mistakes and misfortunes are just the pitfalls of learning, learn learn learn
+          <p>My goal for the nearest future: Turn my passion into my work, show up and make a difference.
+          <p>Born in Slovakia and raised there until my early teens, I’ve since moved through Brazil, Hong Kong, the Netherlands and Indonesia. Now, I landed back in Amsterdam. My personal and artistic perspective is woven from the cultures I’ve lived within. Each place I called home has left an emotional trace — memories, moods, impressions and moments that subtly flow into my designs and I bring these unique global influences into everything I create.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const worksPage = document.getElementById('worksPage');
+    const aboutPage = document.getElementById('aboutPage');
+    const toggleBtn = document.getElementById('toggleBtn');
+
+    function show(page) {
+      if (page === 'about') {
+        worksPage.classList.remove('active');
+        worksPage.classList.add('page');
+        aboutPage.classList.add('active');
+        aboutPage.classList.remove('page');
+        toggleBtn.textContent = 'Works';
+        toggleBtn.setAttribute('aria-label', 'Go to Works');
+      } else {
+        aboutPage.classList.remove('active');
+        aboutPage.classList.add('page');
+        worksPage.classList.add('active');
+        worksPage.classList.remove('page');
+        toggleBtn.textContent = 'About';
+        toggleBtn.setAttribute('aria-label', 'Go to About');
+      }
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      const isAboutActive = aboutPage.classList.contains('active');
+      show(isAboutActive ? 'works' : 'about');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Floating project pictures script
+    const projects = [
+      { src: "https://live.staticflickr.com/65535/54608563675_6a3c45364f_b.jpg", link: "projects/project1.html" },
+      { src: "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExdXprbGwzMjdncGhyanZrcmZ3MzEycjE4cjhsYTI0NTc2dHM2ZjVzYiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/tcaD6uc7C4ZwizmIGh/giphy.gif", link: "projects/project3.html" },
+      { src: "https://live.staticflickr.com/65535/54602328238_174cf9e116_b.jpg", link: "projects/project4.html" },
+      { src: "https://live.staticflickr.com/65535/54602758272_0486cc9e14_b.jpg", link: "projects/project2.html" },
+      { src: "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExc3p5cXg0Y2RkZTR6Z2NlMm51d3p2N2s0cWliNmloZDd6dGx2cm93byZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/uU6ppg72lRQnQRlgqj/giphy.gif", link: "projects/project5.html" },
+      { src: "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExaTRpNG00Y21wb3U1M2tsMm8ycWxjdGRzdG9hNnVleDNsNWZtNGZydCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/HalSGFzf9De7YieD7a/giphy.gif", link: "projects/project6.html" },
+      { src: "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExNzUyYjVvdmtrYW9nOWg0YzljNHpheHdkc3R1dWQ1M2h3NWs0bm5wYyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/e9H2bts6aUa69c9sYu/giphy.gif", link: "projects/project7.html" },
+      { src: "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExZmtrdndrZHY5YThuN24yem9tZHczeGQ0OTY2MzgzYmFpOHlka2ozOSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/gTVHwZggao186JgN7n/giphy.gif", link: "projects/project8.html" },
+      { src: "https://live.staticflickr.com/65535/54676266644_a32f4a2dd0_b.jpg", link: "projects/project9.html" }
+    ];
+
+    const screenWidth = window.innerWidth;
+    const CANVAS_HEIGHT = 3000;
+    const PADDING = 20;
+    const usedAreas = [];
+
+    function isOverlapping(x, y, width, height) {
+      return usedAreas.some(area => (
+        x < area.x + area.width + PADDING &&
+        x + width + PADDING > area.x &&
+        y < area.y + area.height + PADDING &&
+        y + height + PADDING > area.y
+      ));
+    }
+
+    function placeBox(x, y, width, height) {
+      usedAreas.push({ x, y, width, height });
+    }
+
+    function createImageBoxes() {
+      const container = document.getElementById('worksPage');
+      projects.forEach((project, index) => {
+        const img = new Image();
+        img.src = project.src;
+        img.onload = () => {
+          const isHorizontal = img.width > img.height;
+          const isMobile = window.innerWidth <= 768;
+          const width = isMobile ? (isHorizontal ? 200 : 150) : (isHorizontal ? 400 : 300);
+          const height = isMobile ? (isHorizontal ? 150 : 200) : (isHorizontal ? 300 : 400);
+
+          let placed = false;
+          let attempts = 0;
+          while (!placed && attempts < 300) {
+            const x = Math.random() * (screenWidth - width - PADDING);
+            const y = 160 + Math.random() * (CANVAS_HEIGHT - height - 160 - PADDING);
+
+            if (!isOverlapping(x, y, width, height)) {
+              const link = document.createElement('a');
+              link.href = project.link;
+              link.target = "_blank";
+              link.style.position = "absolute";
+              link.style.left = `${x}px`;
+              link.style.top = `${y}px`;
+              link.style.width = `${width}px`;
+              link.style.height = `${height}px`;
+              link.style.display = "block";
+              link.style.zIndex = 0;
+
+              const box = document.createElement('div');
+              box.className = `image-box float${(index % 5) + 1}`;
+              box.style.width = `${width}px`;
+              box.style.height = `${height}px`;
+
+              const imgElement = document.createElement('img');
+              imgElement.src = project.src;
+              imgElement.alt = `Project ${index + 1}`;
+
+              box.appendChild(imgElement);
+              link.appendChild(box);
+              container.appendChild(link);
+
+              placeBox(x, y, width, height);
+              placed = true;
+            }
+            attempts++;
+          }
+
+          if (!placed) {
+            console.warn(`Couldn't place project ${index + 1}`);
+          }
+        };
+      });
+    }
+
+    window.onload = createImageBoxes;
+  </script>
+</body></html>
