@@ -1,7 +1,12 @@
 <!doctype html><html><head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- full viewport configuration below needed for css`position: fixed` to at least appear to work on mobile.
+        side-effect: disables user scaling ('zoom') on mobile.
+        see: https://stackoverflow.com/a/9524534/3827190 -->
+  <!-- meta name="viewport" content="width=device-width,height=device-height,initial-scale=1.0,user-scalable=0,minimum-scale=1.0,maximum-scale=1.0" -->
+  <!-- upon some further testing, the following is the minimum necessary setup for css`position: fixed` to work -->
+  <meta name="viewport" content="initial-scale=1.0,minimum-scale=1">
   <title>Portfolio</title>
   <style>
     body {
