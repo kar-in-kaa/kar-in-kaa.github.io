@@ -15,7 +15,7 @@
     }
 
     body {
-      font-family: Verdana, sans-serif;
+      font-family: Outfit-ExtraLight, Verdana, sans-serif;
       background: #fff;
       margin: 0;
       padding: 40px;
@@ -38,30 +38,30 @@
     }
 
     header h1 {
-      font-family: "Century Gothic", sans-serif;
+      font-family: Outfit-ExtraLight, "Century Gothic", sans-serif;
       font-weight: bold;
       font-size: 40px;
       margin: 0;
     }
 
     header button {
+      font-family: inherit; /* <button> won't inherit font by default */
       font-size: 16px;
-      text-decoration: none;
       color: #000;
+      text-decoration: none;
       background: none;
       border: none;
       cursor: pointer;
-      font-family: inherit;
     }
 
     .attention {
+      font-family: Outfit-ExtraLight, "Century Gothic", sans-serif;
       position: fixed;
       bottom: 20px;
       right: 20px;
       display: flex;
       align-items: center;
       gap: 10px;
-      font-family: "Century Gothic", sans-serif;
       z-index: 1000;
     }
 
@@ -156,7 +156,6 @@
 
     .resume-left p,
     .resume-right p {
-      font-family: Verdana, sans-serif;
       font-size: 14px;
       line-height: 1.6;
       margin: 0;
