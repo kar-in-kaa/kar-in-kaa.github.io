@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>vyrn.</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#fff; }
+  body {
+    font-family:"Suisse Intl","Helvetica Neue",Helvetica,Arial,sans-serif;
+    color:#000;
+    -webkit-user-select:none; user-select:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  /* ---------- Stage: 1440x900 author space, scaled to COVER viewport,
+                anchored bottom-center ---------- */
+  #stage {
+    position:absolute; left:50%; bottom:0;
+    width:1440px; height:900px;
+    transform-origin:bottom center;
+    transform:translateX(-50%) scale(1);
+    overflow:hidden;
+    background:#fff;
+  }
+
+  /* ---------- Logo (fixed to viewport, scaled with cover scale) ---------- */
+  #logo {
+    position:fixed; left:12px; top:16px;
+    width:161.87px; height:71px;
+    z-index:100000;
+    transform-origin:top left;
+    pointer-events:none;
+  }
+
+  /* ---------- Bottom navigation ---------- */
+  #nav {
+    position:absolute; left:50%; bottom:20px;
+    transform:translateX(-50%);
+    display:flex; gap:4px; z-index:100001;
+    white-space:nowrap;
+  }
+  .pill {
+    background:rgba(0,0,0,0.05);
+    -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px);
+    border-radius:200px; height:28px;
+    display:flex; align-items:center;
+  }
+  .pill.icon { width:28px; padding:0; justify-content:center; }
+  .pill.links {
+    width:600px; padding:6px 24px;
+    justify-content:space-between;
+  }
+  .pill.links a {
+    font-size:12px; font-weight:600; letter-spacing:0.2px;
+    text-transform:uppercase; color:#000; text-decoration:none;
+    cursor:pointer;
+  }
+  .pill.icon svg { width:14px; height:14px; display:block; }
+
+  /* ---------- Models ---------- */
+  .model {
+    position:absolute; top:0; left:0;
+    width:1200px; height:2980px;
+    transform-origin:0 0;
+    will-change:transform;
+  }
+  /* inner wrapper owns opacity so per-frame transforms don't fight transitions */
+  .mwrap {
+    position:absolute; inset:0;
+    transition:opacity 0.45s ease;
+  }
+  .mwrap.dim { opacity:0.7; }
+  .mwrap.off { opacity:0; }
+
+  /* GIF clips: full-body shot composited on the white page.
+     Landscape placeholder frames are scaled to the box width and anchored
+     so the feet sit on the runway line (box bottom). */
+  .media {
+    position:absolute; bottom:0; left:50%;
+    width:100%; height:auto;
+    transform:translateX(-50%);
+    display:block;
+    -webkit-user-drag:none;
+    pointer-events:auto;
+    cursor:pointer;
+  }
+  /* Fallback fill: drop-in replacement for a missing/failed clip */
+  .fill {
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    background:#EDE6E2;
+    cursor:pointer;
+  }
+
+  /* selected model in the detail view */
+  .model.selected { transition:transform 0.65s ease; z-index:99999 !important; }
+  .model.selected.noanim { transition:none; }
+
+  /* ---------- Detail panels (fixed to viewport) ---------- */
+  .panel {
+    position:fixed; top:50%; transform:translateY(-50%);
+    z-index:100002;
+    display:flex; flex-direction:column;
+    font-size:12px; font-weight:600; text-transform:uppercase; color:#000;
+    opacity:0; visibility:hidden;
+    transition:opacity 0.5s ease, visibility 0.5s ease;
+  }
+  body.detail-open .panel { opacity:1; visibility:visible; }
+
+  #panel-left { left:24px; width:220px; gap:20px; align-items:flex-start; text-align:left; }
+  #panel-right { right:24px; width:154px; gap:12px; align-items:flex-end; text-align:right; }
+
+  #p-desc { line-height:1.45; }
+  #p-more, #p-wish { text-decoration:underline; cursor:pointer; }
+
+  #p-sizes { display:flex; gap:15px; }
+  #p-sizes span { cursor:pointer; }
+  #p-sizes span.sel { text-decoration:underline; }
+
+  #p-price {
+    font-family:"Instrument Serif","Didot","Bodoni 72","Times New Roman",Times,serif;
+    font-variant-numeric:lining-nums;
+    font-feature-settings:"lnum" 1,"onum" 0;
+    font-size:40px; letter-spacing:-0.8px; line-height:1;
+    text-transform:none;
+  }
+
+  #p-cart {
+    width:107px; height:32px; border-radius:23px;
+    background:#000; color:#fff;
+    border:none; cursor:pointer;
+    font-family:inherit; font-size:12px; font-weight:600;
+    text-transform:uppercase; letter-spacing:0.2px;
+    display:flex; align-items:center; justify-content:center;
+    padding:0;
+  }
+
+  /* ---------- Narrow viewports: keep the nav and panels on screen ----------
+     (desktop keeps the exact spec geometry; this only kicks in when the
+     fixed pill/panel widths would otherwise crop or overlap) */
+  @media (max-width: 760px){
+    .pill.links {
+      width: calc(100vw - 140px);
+      min-width: 0;
+      padding: 6px 12px;
+    }
+    .pill.links a { font-size:10px; }
+    .panel { font-size:10px; }
+    #panel-left  { left:12px;  width:140px; gap:14px; }
+    #panel-right { right:12px; width:120px; }
+    #p-price { font-size:28px; letter-spacing:-0.5px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Logo: "vyrn." wordmark -->
+  <svg id="logo" preserveAspectRatio="none" viewBox="0 0 161.87 71" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M156.75 51.699C155.305 51.699 154.058 51.2395 153.008 50.3204C152.023 49.3356 151.53 48.0555 151.53 46.4799C151.53 44.9699 152.023 43.7554 153.008 42.8363C154.058 41.8516 155.305 41.3592 156.75 41.3592C158.063 41.3592 159.244 41.8516 160.295 42.8363C161.345 43.7554 161.87 44.9699 161.87 46.4799C161.87 48.0555 161.345 49.3356 160.295 50.3204C159.244 51.2395 158.063 51.699 156.75 51.699Z" fill="black"/>
+    <path d="M104.881 50.8127C103.896 50.8127 103.403 50.4517 103.403 49.7295C103.403 49.1387 103.83 48.7448 104.684 48.5478L105.865 48.3509C107.244 48.0883 108.13 47.6944 108.524 47.1692C108.984 46.5784 109.213 45.5936 109.213 44.215V11.1276C109.213 9.9459 109.016 9.15811 108.623 8.76421C108.294 8.30467 107.671 8.00924 106.752 7.87794L104.684 7.58252C103.83 7.51687 103.403 7.1558 103.403 6.49931C103.403 5.97411 103.929 5.61303 104.979 5.41609C107.014 5.08784 108.557 4.56264 109.607 3.8405C110.723 3.11835 111.872 2.23208 113.054 1.18169C113.645 0.590846 114.137 0.295422 114.531 0.295422C115.122 0.295422 115.417 0.689319 115.417 1.47711V5.90846C115.417 6.4993 115.614 6.8932 116.008 7.09015C116.468 7.22145 116.96 7.0245 117.485 6.49931C120.111 4.00462 122.409 2.29773 124.378 1.37864C126.414 0.459545 128.547 0 130.779 0C133.733 0 136.097 1.05039 137.869 3.15118C139.642 5.18632 140.528 8.20619 140.528 12.2108V44.215C140.528 45.5936 140.725 46.5784 141.119 47.1692C141.579 47.6944 142.498 48.0555 143.876 48.2524L146.043 48.5478C146.765 48.6791 147.126 49.073 147.126 49.7295C147.126 50.4517 146.732 50.8127 145.944 50.8127H129.401C128.482 50.8127 128.022 50.4517 128.022 49.7295C128.022 49.073 128.383 48.6791 129.105 48.5478L130.484 48.3509C131.862 48.1539 132.749 47.76 133.143 47.1692C133.602 46.5784 133.832 45.5936 133.832 44.215V13.294C133.832 10.0772 133.241 7.8123 132.059 6.49931C130.878 5.18631 129.204 4.52982 127.037 4.52982C124.936 4.52982 123.033 5.15349 121.326 6.40083C119.684 7.58252 118.371 9.19094 117.387 11.2261C116.402 13.1956 115.91 15.3948 115.91 17.8239V44.215C115.91 45.5936 116.107 46.5784 116.5 47.1692C116.96 47.76 117.879 48.1211 119.258 48.2524L121.917 48.5478C122.639 48.6791 123 49.0402 123 49.6311C123 50.4188 122.507 50.8127 121.523 50.8127H104.881Z" fill="black"/>
+    <path d="M87.7106 6.8932C90.4022 2.29773 93.6519 0 97.4596 0C99.626 0 101.234 0.656495 102.285 1.96949C103.335 3.21683 103.86 4.62829 103.86 6.20388C103.86 7.45123 103.532 8.46879 102.876 9.25659C102.285 10.0444 101.333 10.4383 100.02 10.4383C98.9695 10.4383 98.1817 10.2085 97.6565 9.74896C97.197 9.22376 96.8031 8.63291 96.4748 7.97642C96.2122 7.31992 95.884 6.7619 95.4901 6.30236C95.0962 5.77716 94.4397 5.51456 93.5206 5.51456C92.3389 5.51456 91.2228 6.23671 90.1725 7.681C89.1221 9.05964 88.2358 10.9306 87.5137 13.294C86.8572 15.6574 86.5289 18.349 86.5289 21.3689V44.215C86.5289 45.5936 86.7259 46.5784 87.1198 47.1692C87.5793 47.76 88.4984 48.1211 89.877 48.2524L92.5358 48.5478C93.258 48.6791 93.6191 49.0402 93.6191 49.6311C93.6191 50.4188 93.1267 50.8127 92.1419 50.8127H75.4998C74.515 50.8127 74.0227 50.4517 74.0227 49.7295C74.0227 49.1387 74.4494 48.7448 75.3028 48.5478L76.4845 48.3509C77.8632 48.0883 78.7494 47.6944 79.1433 47.1692C79.6029 46.5784 79.8327 45.5936 79.8327 44.215V11.1276C79.8327 9.9459 79.6357 9.15811 79.2418 8.76421C78.9136 8.30467 78.2899 8.00924 77.3708 7.87794L75.3028 7.58252C74.4494 7.51687 74.0227 7.1558 74.0227 6.49931C74.0227 5.97411 74.5479 5.61303 75.5983 5.41609C77.6334 5.08784 79.1762 4.56264 80.2266 3.8405C81.3426 3.11835 82.4915 2.23208 83.6732 1.18169C84.264 0.590846 84.7564 0.295422 85.1503 0.295422C85.7411 0.295422 86.0365 0.689319 86.0365 1.47711V6.79472C86.0365 7.25427 86.2335 7.5497 86.6274 7.681C87.0213 7.74665 87.3823 7.48405 87.7106 6.8932Z" fill="black"/>
+    <path d="M44.5104 71C42.7378 71 41.3264 70.3763 40.276 69.129C39.2256 67.9473 38.7004 66.5687 38.7004 64.9931C38.7004 63.7457 39.0615 62.6953 39.7836 61.8419C40.5058 60.9884 41.4905 60.5617 42.7378 60.5617C43.7882 60.5617 44.5432 60.7915 45.0028 61.251C45.4623 61.7106 45.7906 62.2358 45.9875 62.8266C46.1844 63.4175 46.3814 63.9427 46.5783 64.4022C46.7753 64.8618 47.1692 65.0915 47.76 65.0915C48.4822 65.0915 49.1387 64.5663 49.7295 63.516C50.3204 62.5312 51.141 60.3976 52.1914 57.1151C52.8479 55.1456 53.2418 53.4387 53.3731 51.9945C53.57 50.5502 53.5372 49.0074 53.2746 47.3662C53.0777 45.7249 52.5853 43.7226 51.7975 41.3592L41.0638 7.18865C40.6042 5.61306 40.1447 4.59549 39.6851 4.13595C39.2912 3.6764 38.6348 3.34815 37.7157 3.15121L36.2385 2.85578C35.3851 2.65884 34.9584 2.23211 34.9584 1.57562C34.9584 0.919121 35.4179 0.590873 36.337 0.590873H52.5853C53.5044 0.590873 53.9639 0.919121 53.9639 1.57562C53.9639 2.29776 53.5372 2.72449 52.6838 2.85578L51.1082 3.05273C49.5326 3.24968 48.515 3.64358 48.0555 4.23442C47.6616 4.75962 47.6944 5.74436 48.1539 7.18865L56.8197 36.0416C57.0166 36.6981 57.312 37.0264 57.7059 37.0264C58.1655 37.0264 58.4937 36.6981 58.6907 36.0416L67.061 8.96119C67.5862 7.18865 67.7175 5.87566 67.4549 5.02222C67.2579 4.10312 66.3389 3.51228 64.6976 3.24968L62.6297 2.85578C61.7762 2.65884 61.3495 2.23211 61.3495 1.57562C61.3495 0.919121 61.809 0.590873 62.7281 0.590873H75.2344C76.1535 0.590873 76.613 0.951945 76.613 1.67409C76.613 2.33059 76.2191 2.79014 75.4313 3.05273L74.5451 3.34816C73.5603 3.6764 72.7397 4.26725 72.0832 5.12069C71.4267 5.97414 70.7374 7.45125 70.0152 9.55204L55.3426 55.3426C53.8983 59.9381 52.5853 63.3518 51.4036 65.5839C50.2875 67.816 49.2043 69.2603 48.1539 69.9168C47.1035 70.6389 45.889 71 44.5104 71Z" fill="black"/>
+    <path d="M20.4827 51.699C19.8918 51.699 19.4651 51.338 19.2025 50.6158L6.10541 7.18865C5.64586 5.61306 5.18631 4.5955 4.72677 4.13595C4.33287 3.6764 3.67637 3.34816 2.75728 3.15121L1.28017 2.85578C0.426722 2.65884 0 2.23211 0 1.57562C0 0.919121 0.459547 0.590873 1.37864 0.590873H17.6269C18.546 0.590873 19.0055 0.919121 19.0055 1.57562C19.0055 2.29776 18.5788 2.72449 17.7254 2.85578L16.1498 3.05273C14.5742 3.24968 13.5895 3.64358 13.1956 4.23442C12.8017 4.75962 12.8017 5.74436 13.1956 7.18865L21.3689 35.6477C21.5659 36.3699 21.8941 36.7309 22.3537 36.7309C22.8132 36.7309 23.1415 36.3699 23.3384 35.6477L31.3148 8.96119C31.84 7.18865 31.9713 5.87566 31.7087 5.02222C31.5118 4.10312 30.5927 3.51228 28.9514 3.24968L26.8835 2.85578C26.03 2.65884 25.6033 2.23211 25.6033 1.57562C25.6033 0.919121 26.0629 0.590873 26.982 0.590873H39.4882C40.4073 0.590873 40.8668 0.951945 40.8668 1.67409C40.8668 2.33059 40.4729 2.79014 39.6851 3.05273L38.7989 3.34816C37.8141 3.6764 36.9607 4.26725 36.2385 5.12069C35.5821 5.97414 34.9256 7.45125 34.2691 9.55204L21.7628 50.6158C21.5002 51.338 21.0735 51.699 20.4827 51.699Z" fill="black"/>
+  </svg>
+
+  <!-- Stage -->
+  <div id="stage">
+    <div id="nav">
+      <div class="pill icon" id="nav-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+      <div class="pill links">
+        <a href="#">New arrivals</a>
+        <a href="#">women</a>
+        <a href="#">men</a>
+        <a href="#">bags</a>
+        <a href="#">shows</a>
+      </div>
+      <div class="pill icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </div>
+      <div class="pill icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <div class="pill icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail panels -->
+  <div class="panel" id="panel-left">
+    <div id="p-name"></div>
+    <div id="p-desc"></div>
+    <div id="p-more">more details</div>
+  </div>
+  <div class="panel" id="panel-right">
+    <div id="p-wish">add to wishlist</div>
+    <div id="p-sizes"><span>34</span><span>36</span><span class="sel">38</span><span>40</span><span>42</span></div>
+    <div id="p-price"></div>
+    <button id="p-cart">add to cart</button>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ------------------------------------------------------------------
+     Media discovery.
+     The spec calls for video files; this build uses the animated GIF
+     placeholders in pictures/ instead (per project instructions).
+     Sorted by filename; each file becomes one model, in that order.
+  ------------------------------------------------------------------ */
+  var MEDIA = [
+    "pictures/placeholder-2.gif",
+    "pictures/placeholder-front.gif",
+    "pictures/placeholder-side.gif"
+  ];
+
+  /* Per-model product data (assigned in order; cycled if more models) */
+  var PRODUCTS = [
+    { name:"Sabbia Croc Set",            desc:"Two-piece in croc-embossed leather - a sculpted long-sleeve top with a floor-grazing column skirt and matching boots.", price:"£2450" },
+    { name:"Balloon-Sleeve Leather Top", desc:"Nappa leather top with dramatic leg-of-mutton sleeves, worn with second-skin leggings and opera gloves.",                price:"£1890" },
+    { name:"Dune Jersey Catsuit",        desc:"Second-skin turtleneck catsuit in stretch jersey. Body-hugging silhouette with a hidden zip and extra-long sleeves.",   price:"£1100" },
+    { name:"Onyx Leather Playsuit",      desc:"Long-sleeve leather playsuit with peaked shoulders and a nipped waist, shown over sheer tights.",                       price:"£1650" },
+    { name:"Drape Halter Bodysuit",      desc:"Halter bodysuit in fluid jersey with a gathered neckline, styled with leather opera gloves.",                           price:"£780"  },
+    { name:"Corset Leather Playsuit",    desc:"Boned leather playsuit with a sweetheart bustier and fine straps. Finished with knee-high boots.",                      price:"£1290" },
+    { name:"Cascade Fringe Gown",        desc:"Floor-sweeping halter gown in liquid fringe. Bias-cut column silhouette that moves with every step.",                   price:"£3200" },
+    { name:"Vapor Silk Slip",            desc:"Bias-cut silk slip dress with a whisper-fine strap and a fluid, liquid drape.",                                         price:"£960"  }
+  ];
+
+  /* ------------------------------------------------------------------
+     Runway geometry (exact spec values)
+  ------------------------------------------------------------------ */
+  var CX = [-96.5, -1.0, 108.5, 263, 460.5, 694, 1013, 1422.5, 1832];
+  var BY = [506, 521, 554, 600, 662, 736, 831, 961, 1091];
+  var SC = [0.034167,0.046667,0.0675,0.098333,0.139167,0.188333,0.251667,0.339167,0.4572];
+  var NAT_W = 1200, NAT_H = 2980;
+  var PERIOD = 8, SLOT_MS = 3600;
+
+  var stage = document.getElementById("stage");
+  var coverScale = 1;
+  var models = [];          // { el, wrap, isFill, product }
+  var prog = 0, lastTime = null, paused = false;
+  var detailOpen = false, selected = null;
+  var reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function lerp(a,b,t){ return a + (b-a)*t; }
+
+  function place(el, q){
+    var i = Math.floor(q), f = q - i;
+    var s  = lerp(SC[i], SC[i+1], f);
+    var cx = lerp(CX[i], CX[i+1], f);
+    var by = lerp(BY[i], BY[i+1], f);
+    var x = cx - (NAT_W*s)/2;   // box left  = centre - halfwidth
+    var y = by - (NAT_H*s);     // box top   = bottom - height
+    el.style.transform = "translate3d("+x+"px,"+y+"px,0) scale("+s+")";
+    el.style.zIndex = String(Math.round(s*10000)); // nearer (larger) model on top
+  }
+
+  /* ------------------------------------------------------------------
+     Build models (one per media file, or 7 fallback fills if none)
+  ------------------------------------------------------------------ */
+  function addFill(model){
+    var fill = document.createElement("div");
+    fill.className = "fill";
+    model.wrap.appendChild(fill);
+  }
+
+  var N = MEDIA.length > 0 ? MEDIA.length : 7;
+  var SPACING = PERIOD / N;
+
+  for (var i = 0; i < N; i++){
+    var el = document.createElement("div");
+    el.className = "model";
+    var wrap = document.createElement("div");
+    wrap.className = "mwrap";
+    el.appendChild(wrap);
+    stage.appendChild(el);
+
+    var m = { el: el, wrap: wrap, isFill: true, product: PRODUCTS[i % PRODUCTS.length] };
+    models.push(m);
+
+    (function(model, idx){
+      if (MEDIA.length === 0){
+        // no media at all -> pure fallback fill
+        addFill(model);
+      } else {
+        var img = document.createElement("img");
+        img.className = "media";
+        img.alt = "";
+        img.draggable = false;
+        img.src = MEDIA[idx % MEDIA.length];
+        img.addEventListener("error", function(){
+          if (img.parentNode) img.parentNode.removeChild(img);
+          model.isFill = true;
+          addFill(model);
+        });
+        img.addEventListener("load", function(){ model.isFill = false; });
+        wrap.appendChild(img);
+        model.isFill = false;
+      }
+
+      var mel = model.el;
+      // hover: freeze runway, dim the others, keep the hovered clip playing
+      mel.addEventListener("pointerenter", function(){
+        if (detailOpen || reducedMotion) return;
+        paused = true;
+        for (var j = 0; j < models.length; j++){
+          if (models[j] !== model) models[j].wrap.classList.add("dim");
+        }
+      });
+      mel.addEventListener("pointerleave", function(){
+        if (detailOpen) return;
+        paused = false;
+        for (var j = 0; j < models.length; j++) models[j].wrap.classList.remove("dim");
+      });
+
+      // tap / click: open the detail view
+      mel.addEventListener("click", function(){
+        if (detailOpen) return;      // detail view is closed via Back only
+        openDetail(model);
+      });
+    })(m, i);
+  }
+
+  /* ------------------------------------------------------------------
+     Animation loop
+  ------------------------------------------------------------------ */
+  function frame(now){
+    if (lastTime === null) lastTime = now;
+    var dt = now - lastTime; lastTime = now;
+    if (!paused){
+      prog = (prog + dt/SLOT_MS) % PERIOD;
+      for (var i = 0; i < models.length; i++) place(models[i].el, (i*SPACING + prog) % PERIOD);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  if (reducedMotion){
+    // place once, no animation
+    for (var k = 0; k < models.length; k++) place(models[k].el, (k*SPACING) % PERIOD);
+  } else {
+    requestAnimationFrame(frame);
+  }
+
+  /* ------------------------------------------------------------------
+     Cover scaling: stage + logo
+  ------------------------------------------------------------------ */
+  function applyScale(){
+    coverScale = Math.max(window.innerWidth / 1440, window.innerHeight / 900);
+    stage.style.transform = "translateX(-50%) scale(" + coverScale + ")";
+    document.getElementById("logo").style.transform = "scale(" + coverScale + ")";
+    if (detailOpen && selected){
+      // snap (no transition) to the new center
+      selected.el.classList.add("noanim");
+      detailTransform(selected.el);
+      void selected.el.offsetWidth; // flush
+      selected.el.classList.remove("noanim");
+    }
+  }
+  window.addEventListener("resize", applyScale);
+  applyScale();
+
+  /* ------------------------------------------------------------------
+     Detail view
+  ------------------------------------------------------------------ */
+  var pName = document.getElementById("p-name");
+  var pDesc = document.getElementById("p-desc");
+  var pPrice = document.getElementById("p-price");
+  var pSizes = document.getElementById("p-sizes");
+
+  pSizes.addEventListener("click", function(e){
+    if (e.target.tagName !== "SPAN") return;
+    var spans = pSizes.getElementsByTagName("span");
+    for (var i = 0; i < spans.length; i++) spans[i].classList.remove("sel");
+    e.target.classList.add("sel");
+  });
+
+  function detailTransform(el){
+    var cs = coverScale, vw = window.innerWidth, vh = window.innerHeight;
+    var s = (vh*0.9) / (NAT_H*cs);              // ~90% of viewport height
+    var maxBoxW = vw - 2*300;                   // keep clear of the side panels
+    if (maxBoxW < 240) maxBoxW = vw - 24;       // narrow screens: span the viewport
+    if (NAT_W*s*cs > maxBoxW) s = maxBoxW/(NAT_W*cs);
+    var mcy = 900 - vh/(2*cs);                  // stage-y that maps to viewport centre
+    var x = 720 - (NAT_W*s)/2;
+    var y = mcy - (NAT_H*s)/2;
+    el.style.transform = "translate3d("+x+"px,"+y+"px,0) scale("+s+")";
+  }
+
+  function openDetail(model){
+    detailOpen = true;
+    selected = model;
+    paused = true;
+
+    pName.textContent = model.product.name;
+    pDesc.textContent = model.product.desc;
+    pPrice.textContent = model.product.price;
+
+    for (var j = 0; j < models.length; j++){
+      var m = models[j];
+      if (m === model) continue;
+      // others turn off: pause (gifs keep looping, so fade fully out instead) ...
+      m.wrap.classList.remove("dim");
+      m.wrap.classList.add("off");
+    }
+    // ... and the selected one animates to the centre, above everything
+    model.el.classList.add("selected");
+    model.el.style.zIndex = "99999";
+    detailTransform(model.el);
+
+    document.body.classList.add("detail-open");
+    history.pushState({ detail: true }, "");
+  }
+
+  function closeDetail(){
+    if (!detailOpen) return;
+    detailOpen = false;
+    document.body.classList.remove("detail-open");
+
+    if (selected){
+      selected.el.classList.remove("selected");
+      // restore its runway slot immediately (no transition on the way back)
+      selected.el.classList.add("noanim");
+      place(selected.el, (models.indexOf(selected)*SPACING + prog) % PERIOD);
+      void selected.el.offsetWidth;
+      selected.el.classList.remove("noanim");
+    }
+    selected = null;
+
+    for (var j = 0; j < models.length; j++){
+      models[j].wrap.classList.remove("off");
+      models[j].wrap.classList.remove("dim");
+    }
+    paused = false; // resume from where it froze
+  }
+
+  window.addEventListener("popstate", function(){
+    if (detailOpen) closeDetail();
+  });
+})();
+</script>
+</body>
+</html>
