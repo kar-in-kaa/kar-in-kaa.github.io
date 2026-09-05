@@ -60,6 +60,7 @@
     text-transform:uppercase; color:#000; text-decoration:none;
     cursor:pointer;
   }
+  .pill.links a.on { text-decoration:underline; }
   .pill.icon svg { width:14px; height:14px; display:block; }
 
   /* ---------- Models ---------- */
@@ -111,6 +112,21 @@
     transition:opacity 0.5s ease, visibility 0.5s ease;
   }
   body.detail-open .panel { opacity:1; visibility:visible; }
+
+  /* ---------- About view ---------- */
+  #about {
+    position:fixed; left:50%; top:50%;
+    transform:translate(-50%,-50%);
+    width:min(440px, calc(100vw - 48px));
+    z-index:100002;
+    display:flex; flex-direction:column; gap:20px;
+    font-size:12px; font-weight:600; text-transform:uppercase; color:#000;
+    opacity:0; visibility:hidden;
+    transition:opacity 0.5s ease, visibility 0.5s ease;
+  }
+  body.about-open #about { opacity:1; visibility:visible; }
+  #about .a-body { line-height:1.45; }
+  #about a { color:#000; }
 
   #panel-left { left:24px; width:220px; gap:20px; align-items:flex-start; text-align:left; }
   #panel-right { right:24px; width:154px; gap:12px; align-items:flex-end; text-align:right; }
@@ -167,18 +183,12 @@
   <div id="stage">
     <div id="nav">
       <div class="pill links">
-        <a href="#">classic</a>
-        <a href="#">vintage</a>
-        <a href="#">about</a>
+        <a href="#" id="tab-classic">classic</a>
+        <a href="#" id="tab-vintage">vintage</a>
+        <a href="#" id="tab-about">about</a>
         <a href="https://www.instagram.com/kar_in_kaa/" target="_blank" rel="noopener">instagram</a>
         <a href="#">pinterest</a>
         <a href="#">email</a>
-      </div>
-      <div class="pill icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-      </div>
-      <div class="pill icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       </div>
       <div class="pill icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
@@ -199,6 +209,13 @@
     <button id="p-cart">add to cart</button>
   </div>
 
+  <!-- About view -->
+  <div id="about">
+    <div>karo. — about</div>
+    <div class="a-body">karo. is a slow fashion atelier. classic tailoring and vintage silhouettes are reworked into one-of-one garments - cut, sewn and finished by hand in small series. every look walking the runway is available in strictly limited quantities.</div>
+    <div><a href="https://www.instagram.com/kar_in_kaa/" target="_blank" rel="noopener">instagram — @kar_in_kaa</a></div>
+  </div>
+
 <script>
 (function(){
   "use strict";
@@ -215,7 +232,9 @@
     "pictures/placeholder-side.gif"
   ];
 
-  /* Per-model product data (assigned in order; cycled if more models) */
+  /* Per-model product data (assigned in order; cycled if more models).
+     Categories alternate so both filters always have something to show. */
+  var CATS = ["classic", "vintage"];
   var PRODUCTS = [
     { name:"Sabbia Croc Set",            desc:"Two-piece in croc-embossed leather - a sculpted long-sleeve top with a floor-grazing column skirt and matching boots.", price:"£2450" },
     { name:"Balloon-Sleeve Leather Top", desc:"Nappa leather top with dramatic leg-of-mutton sleeves, worn with second-skin leggings and opera gloves.",                price:"£1890" },
@@ -226,6 +245,7 @@
     { name:"Cascade Fringe Gown",        desc:"Floor-sweeping halter gown in liquid fringe. Bias-cut column silhouette that moves with every step.",                   price:"£3200" },
     { name:"Vapor Silk Slip",            desc:"Bias-cut silk slip dress with a whisper-fine strap and a fluid, liquid drape.",                                         price:"£960"  }
   ];
+  for (var c = 0; c < PRODUCTS.length; c++) PRODUCTS[c].cat = CATS[c % CATS.length];
 
   /* ------------------------------------------------------------------
      Runway geometry (exact spec values)
@@ -238,10 +258,15 @@
 
   var stage = document.getElementById("stage");
   var coverScale = 1;
-  var models = [];          // { el, wrap, isFill, product }
+  var models = [];          // { el, wrap, isFill, product, aspect }
+  var activeModels = [];    // currently on the runway (after filtering)
+  var curFilter = null;     // null | "classic" | "vintage"
+  var aboutOpen = false;
   var prog = 0, lastTime = null, paused = false;
   var detailOpen = false, selected = null;
   var reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function runwaySpacing(){ return PERIOD / Math.max(1, activeModels.length); }
 
   function lerp(a,b,t){ return a + (b-a)*t; }
 
@@ -266,7 +291,6 @@
   }
 
   var N = MEDIA.length > 0 ? MEDIA.length : 7;
-  var SPACING = PERIOD / N;
 
   for (var i = 0; i < N; i++){
     var el = document.createElement("div");
@@ -305,24 +329,53 @@
       var mel = model.el;
       // hover: freeze runway, dim the others, keep the hovered clip playing
       mel.addEventListener("pointerenter", function(){
-        if (detailOpen || reducedMotion) return;
+        if (detailOpen || aboutOpen || reducedMotion) return;
         paused = true;
-        for (var j = 0; j < models.length; j++){
-          if (models[j] !== model) models[j].wrap.classList.add("dim");
+        for (var j = 0; j < activeModels.length; j++){
+          if (activeModels[j] !== model) activeModels[j].wrap.classList.add("dim");
         }
       });
       mel.addEventListener("pointerleave", function(){
-        if (detailOpen) return;
+        if (detailOpen || aboutOpen) return;
         paused = false;
-        for (var j = 0; j < models.length; j++) models[j].wrap.classList.remove("dim");
+        for (var j = 0; j < activeModels.length; j++) activeModels[j].wrap.classList.remove("dim");
       });
 
       // tap / click: open the detail view
       mel.addEventListener("click", function(){
-        if (detailOpen) return;      // detail view is closed via Back only
+        if (detailOpen || aboutOpen) return;      // detail view is closed via Back only
         openDetail(model);
       });
     })(m, i);
+  }
+
+  /* ------------------------------------------------------------------
+     Filtering + visibility
+  ------------------------------------------------------------------ */
+  function applyFilter(filter){
+    curFilter = filter;
+    activeModels = models.filter(function(m){ return !filter || m.product.cat === filter; });
+    for (var j = 0; j < activeModels.length; j++) activeModels[j].slot = j;
+    showRunway();
+    updateTabs();
+  }
+
+  function showRunway(){
+    for (var j = 0; j < models.length; j++){
+      var m = models[j];
+      var on = activeModels.indexOf(m) !== -1;
+      m.el.style.display = on ? "" : "none";
+    }
+    // place the visible ones immediately so nothing pops
+    for (var k = 0; k < activeModels.length; k++){
+      place(activeModels[k].el, (k*runwaySpacing() + prog) % PERIOD);
+    }
+  }
+
+  function updateTabs(){
+    document.getElementById("tab-classic").classList.toggle("on", curFilter === "classic");
+    document.getElementById("tab-vintage").classList.toggle("on", curFilter === "vintage");
+    document.getElementById("tab-about").classList.toggle("on", aboutOpen);
   }
 
   /* ------------------------------------------------------------------
@@ -333,14 +386,15 @@
     var dt = now - lastTime; lastTime = now;
     if (!paused){
       prog = (prog + dt/SLOT_MS) % PERIOD;
-      for (var i = 0; i < models.length; i++) place(models[i].el, (i*SPACING + prog) % PERIOD);
+      var spacing = runwaySpacing();
+      for (var i = 0; i < activeModels.length; i++) place(activeModels[i].el, (i*spacing + prog) % PERIOD);
     }
     requestAnimationFrame(frame);
   }
 
   if (reducedMotion){
     // place once, no animation
-    for (var k = 0; k < models.length; k++) place(models[k].el, (k*SPACING) % PERIOD);
+    for (var k = 0; k < activeModels.length; k++) place(activeModels[k].el, (k*runwaySpacing()) % PERIOD);
   } else {
     requestAnimationFrame(frame);
   }
@@ -428,7 +482,7 @@
       selected.el.classList.remove("selected");
       // restore its runway slot immediately (no transition on the way back)
       selected.el.classList.add("noanim");
-      place(selected.el, (models.indexOf(selected)*SPACING + prog) % PERIOD);
+      place(selected.el, (selected.slot*runwaySpacing() + prog) % PERIOD);
       void selected.el.offsetWidth;
       selected.el.classList.remove("noanim");
     }
@@ -443,7 +497,50 @@
 
   window.addEventListener("popstate", function(){
     if (detailOpen) closeDetail();
+    else if (aboutOpen) closeAbout();
   });
+
+  /* ------------------------------------------------------------------
+     About view (also closed via Back only)
+  ------------------------------------------------------------------ */
+  function openAbout(){
+    if (detailOpen || aboutOpen) return;
+    aboutOpen = true;
+    paused = true;
+    for (var j = 0; j < models.length; j++) models[j].el.style.display = "none";
+    document.body.classList.add("about-open");
+    updateTabs();
+    history.pushState({ about: true }, "");
+  }
+
+  function closeAbout(){
+    if (!aboutOpen) return;
+    aboutOpen = false;
+    document.body.classList.remove("about-open");
+    showRunway();
+    paused = false;
+    updateTabs();
+  }
+
+  /* ------------------------------------------------------------------
+     Bottom navigation wiring
+  ------------------------------------------------------------------ */
+  function tabClick(kind){
+    if (detailOpen) return;                 // detail is closed via Back only
+    if (aboutOpen && kind !== "about") history.back(); // pop the about entry
+    if (kind === "about"){
+      if (aboutOpen) history.back();        // toggle off
+      else openAbout();
+      return;
+    }
+    // filters: click again to clear
+    applyFilter(curFilter === kind ? null : kind);
+  }
+  document.getElementById("tab-classic").addEventListener("click", function(e){ e.preventDefault(); tabClick("classic"); });
+  document.getElementById("tab-vintage").addEventListener("click", function(e){ e.preventDefault(); tabClick("vintage"); });
+  document.getElementById("tab-about").addEventListener("click", function(e){ e.preventDefault(); tabClick("about"); });
+
+  applyFilter(null);
 })();
 </script>
 </body>
