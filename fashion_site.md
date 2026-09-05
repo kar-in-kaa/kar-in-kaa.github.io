@@ -87,7 +87,7 @@ border-radius: 200px; height: 28px;`.
 - One search **icon pill** (28x28, `padding:0`, centers a 14px icon).
 - One wide **links pill** (`width:600px; padding:6px 24px; justify-content:space-between`)
   containing 5 uppercase links, 12px, `font-weight:600`, `letter-spacing:0.2px`,
-  color `#000`: **New arrivals | women | men | bags | shows**.
+  color `#000`: **classic | vintage | about | instagram | pinterest | email | spotify | shipping**.
 - Three more icon pills: heart, user, cart.
 Icons are thin-line (feather-style), `stroke:#000; stroke-width:2; 14x14`. Use these:
 
